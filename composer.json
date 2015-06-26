@@ -1,0 +1,23 @@
+{
+  "name": "meanbee/magerun-dac",
+  "description": "Duplicate and commit files from one theme to another",
+  "license": "MIT",
+  "keywords": ["magerun"],
+  "authors": [
+    {
+      "name": "Tomas Gerulaitis",
+      "email": "tomas.gerulaitis@meanbee.com"
+    }
+  ],
+  "minimum-stability": "dev",
+  "require": {},
+  "require-dev": {
+    "n98/magerun": "1.*"
+  },
+  "autoload": {
+    "psr-0": {
+      "Meanbee\\Magerun\\Dac\\": "src/"
+    }
+  }
+}
+
