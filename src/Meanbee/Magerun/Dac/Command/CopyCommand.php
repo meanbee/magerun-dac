@@ -4,6 +4,7 @@ namespace Meanbee\Magerun\Dac\Command;
 use N98\Magento\Command\AbstractMagentoCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class CopyCommand extends AbstractMagentoCommand
@@ -17,8 +18,21 @@ class CopyCommand extends AbstractMagentoCommand
         $this
             ->setName("dev:theme:copy")
             ->setDescription("Copy a file from the \"base/default\" design theme to the specified theme.")
-            ->addArgument("filepath", InputArgument::REQUIRED, "Path to the file to copy, relative to the theme directory in design.")
-            ->addArgument("destination", InputArgument::REQUIRED, "Destination theme, in <package>[/<theme>] format.");
+            ->addArgument(
+                "filepath",
+                InputArgument::REQUIRED,
+                "Path to the file to copy, relative to the theme directory in design."
+            )
+            ->addArgument(
+                "destination",
+                InputArgument::REQUIRED,
+                "Destination theme (specified in <package>[/<theme>] format)."
+            )
+            ->addOption(
+                "source", null,
+                InputOption::VALUE_REQUIRED,
+                "Use an alternate theme to copy the file from (specified in <package>[/<theme>] format)."
+            );
     }
 
     /**
@@ -34,7 +48,7 @@ class CopyCommand extends AbstractMagentoCommand
         $this->detectMagento($output);
 
         $source = $this->getDesignPath(
-            "base/default",
+            $input->getOption("source"),
             $input->getArgument("filepath")
         );
         $destination = $this->getDesignPath(
