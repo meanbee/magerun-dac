@@ -1,0 +1,6 @@
+autoloaders:
+  Meanbee\Magerun\Dac: %module%/src
+
+commands:
+  customCommands:
+    - Meanbee\Magerun\Dac\Command\CopyCommand
