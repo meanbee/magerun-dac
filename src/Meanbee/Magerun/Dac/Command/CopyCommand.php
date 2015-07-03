@@ -29,6 +29,11 @@ class CopyCommand extends AbstractMagentoCommand
                 "Destination theme (specified in <package>[/<theme>] format)."
             )
             ->addOption(
+                "force", "f",
+                InputOption::VALUE_NONE,
+                "Overwrite the destination file if it already exists."
+            )
+            ->addOption(
                 "source", null,
                 InputOption::VALUE_REQUIRED,
                 "Use an alternate theme to copy the file from (specified in <package>[/<theme>] format)."
@@ -68,7 +73,7 @@ class CopyCommand extends AbstractMagentoCommand
             return 1;
         }
 
-        if (file_exists($destination)) {
+        if (file_exists($destination) && !$input->getOption("force")) {
             $output->writeln("<error>Destination file already exists!</error>");
             return 1;
         }
