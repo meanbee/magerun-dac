@@ -16,6 +16,8 @@ class CopyCommand extends AbstractMagentoCommand
     const ERROR_DESTINATION_NOT_DIRECTORY = 4;
     const ERROR_COPY_FAILED = 5;
 
+    const DEFAULT_COMMIT_MESSAGE = "Initial commit of %s";
+
     /**
      * Configure the command parameters.
      */
@@ -38,6 +40,17 @@ class CopyCommand extends AbstractMagentoCommand
                 "force", "f",
                 InputOption::VALUE_NONE,
                 "Overwrite the destination file if it already exists."
+            )
+            ->addOption(
+                "commit", "c",
+                InputOption::VALUE_NONE,
+                "Commit the resulting file to git."
+            )
+            ->addOption(
+                "commit-message", "m",
+                InputOption::VALUE_REQUIRED,
+                "Specify the commit message used with --commit.",
+                static::DEFAULT_COMMIT_MESSAGE
             )
             ->addOption(
                 "source", null,
@@ -113,6 +126,13 @@ class CopyCommand extends AbstractMagentoCommand
             return 1;
         }
 
+        if ($input->getOption("commit")) {
+            if (!$this->commit($destination, $input->getOption("commit-message"))) {
+                $output->writeln("<error>Failed to commit the resulting file to git!</error>");
+                return 2;
+            }
+        }
+
         $output->writeln("<info>Done</info>");
 
         return 0;
@@ -153,6 +173,30 @@ class CopyCommand extends AbstractMagentoCommand
         }
 
         return static::SUCCESS;
+    }
+
+    /**
+     * Commit the specified file to git with the given message.
+     *
+     * @param string $file
+     * @param string $message
+     *
+     * @return bool
+     */
+    protected function commit($file, $message = null)
+    {
+        system(sprintf('git add %s', $file), $status);
+
+        if ($status === 0) {
+            $message = sprintf(
+                $message ?: static::DEFAULT_COMMIT_MESSAGE,
+                str_replace($this->getApplication()->getMagentoRootFolder() . DIRECTORY_SEPARATOR, "", $file)
+            );
+
+            system(sprintf('git commit -m "%s"', addslashes($message)), $status);
+        }
+
+        return ($status === 0);
     }
 
     /**
