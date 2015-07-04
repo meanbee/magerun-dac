@@ -42,6 +42,11 @@ class CopyCommand extends AbstractMagentoCommand
                 "adminhtml", null,
                 InputOption::VALUE_NONE,
                 "Use adminhtml themes for source and destination."
+            )
+            ->addOption(
+                "skin", null,
+                InputOption::VALUE_NONE,
+                "Copy the file between the theme skin folders."
             );
     }
 
@@ -60,11 +65,13 @@ class CopyCommand extends AbstractMagentoCommand
         $source = $this->getDesignPath(
             $input->getOption("source"),
             $input->getArgument("filepath"),
+            $input->getOption("skin"),
             $input->getOption("adminhtml")
         );
         $destination = $this->getDesignPath(
             $input->getArgument("destination"),
             $input->getArgument("filepath"),
+            $input->getOption("skin"),
             $input->getOption("adminhtml")
         );
         $destination_dir = dirname($destination);
@@ -111,19 +118,19 @@ class CopyCommand extends AbstractMagentoCommand
      *
      * @param string      $theme
      * @param string|null $file
+     * @param bool        $is_skin
      * @param bool        $is_adminhtml
      *
      * @return string
      */
-    protected function getDesignPath($theme, $file = null, $is_adminhtml = false)
+    protected function getDesignPath($theme, $file = null, $is_skin = false, $is_adminhtml = false)
     {
         @list($package, $theme) = explode("/", $theme);
 
         $path = array(
             $this->getApplication()->getMagentoRootFolder(),
-            "app",
-            "design",
-            ($is_adminhtml) ? "adminhtml" : "frontend",
+            $is_skin ? "skin" : "app" . DIRECTORY_SEPARATOR . "design",
+            $is_adminhtml ? "adminhtml" : "frontend",
             $package ?: ($is_adminhtml ? "default" : "base"),
             $theme ?: "default"
         );
