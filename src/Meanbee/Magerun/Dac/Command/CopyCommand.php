@@ -37,6 +37,11 @@ class CopyCommand extends AbstractMagentoCommand
                 "source", null,
                 InputOption::VALUE_REQUIRED,
                 "Use an alternate theme to copy the file from (specified in <package>[/<theme>] format)."
+            )
+            ->addOption(
+                "adminhtml", null,
+                InputOption::VALUE_NONE,
+                "Use adminhtml themes for source and destination."
             );
     }
 
@@ -54,11 +59,13 @@ class CopyCommand extends AbstractMagentoCommand
 
         $source = $this->getDesignPath(
             $input->getOption("source"),
-            $input->getArgument("filepath")
+            $input->getArgument("filepath"),
+            $input->getOption("adminhtml")
         );
         $destination = $this->getDesignPath(
             $input->getArgument("destination"),
-            $input->getArgument("filepath")
+            $input->getArgument("filepath"),
+            $input->getOption("adminhtml")
         );
         $destination_dir = dirname($destination);
 
@@ -104,20 +111,21 @@ class CopyCommand extends AbstractMagentoCommand
      *
      * @param string      $theme
      * @param string|null $file
+     * @param bool        $is_adminhtml
      *
      * @return string
      */
-    protected function getDesignPath($theme, $file = null)
+    protected function getDesignPath($theme, $file = null, $is_adminhtml = false)
     {
-        $theme = explode("/", $theme);
+        @list($package, $theme) = explode("/", $theme);
 
         $path = array(
             $this->getApplication()->getMagentoRootFolder(),
             "app",
             "design",
-            "frontend",
-            !empty($theme[0]) ? $theme[0] : "base",
-            !empty($theme[1]) ? $theme[1] : "default"
+            ($is_adminhtml) ? "adminhtml" : "frontend",
+            $package ?: ($is_adminhtml ? "default" : "base"),
+            $theme ?: "default"
         );
 
         if ($file) {
