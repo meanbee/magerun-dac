@@ -9,6 +9,12 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class CopyCommand extends AbstractMagentoCommand
 {
+    const SUCCESS = 0;
+    const ERROR_SOURCE_DOES_NOT_EXIST = 1;
+    const ERROR_DESTINATION_EXISTS = 2;
+    const ERROR_FAILED_TO_CREATE_DIRECTORY = 3;
+    const ERROR_DESTINATION_NOT_DIRECTORY = 4;
+    const ERROR_COPY_FAILED = 5;
 
     /**
      * Configure the command parameters.
@@ -74,7 +80,6 @@ class CopyCommand extends AbstractMagentoCommand
             $input->getOption("skin"),
             $input->getOption("adminhtml")
         );
-        $destination_dir = dirname($destination);
 
         $output->writeln(sprintf(
             "<info>Copy file:</info>\n\t<comment>Source: %s</comment>\n\t<comment>Destination: %s</comment>",
@@ -82,34 +87,72 @@ class CopyCommand extends AbstractMagentoCommand
             $destination
         ));
 
-        if (!file_exists($source)) {
-            $output->writeln("<error>Source file does not exist!</error>");
-            return 1;
-        }
+        $result = $this->copy($source, $destination, $input->getOption("force"));
 
-        if (file_exists($destination) && !$input->getOption("force")) {
-            $output->writeln("<error>Destination file already exists!</error>");
-            return 1;
-        }
-
-        if (!file_exists($destination_dir)) {
-            if (!mkdir($destination_dir, 0755, true)) {
-                $output->writeln("<error>Failed to create the destination directory!</error>");
-                return 1;
+        if ($result !== static::SUCCESS) {
+            switch ($result) {
+                case static::ERROR_SOURCE_DOES_NOT_EXIST:
+                    $message = "Source file does not exist!";
+                    break;
+                case static::ERROR_DESTINATION_EXISTS:
+                    $message = "Destination file already exists!";
+                    break;
+                case static::ERROR_FAILED_TO_CREATE_DIRECTORY:
+                    $message = "Failed to create the destination directory!";
+                    break;
+                case static::ERROR_DESTINATION_NOT_DIRECTORY:
+                    $message = "Destination is not a directory!";
+                    break;
+                case static::ERROR_COPY_FAILED:
+                default:
+                    $message = "Failed!";
+                    break;
             }
-        } else if (!is_dir($destination_dir)) {
-            $output->writeln("<error>Destination is not a directory!</error>");
-            return 1;
-        }
 
-        if (!copy($source, $destination)) {
-            $output->writeln("<error>Failed!</error>");
+            $output->writeln(sprintf("<error>%s</error>", $message));
             return 1;
         }
 
         $output->writeln("<info>Done</info>");
 
         return 0;
+    }
+
+    /**
+     * Copy a file from source to destination. Create the destination
+     * directory structure if it does not exist.
+     *
+     * @param      $source
+     * @param      $destination
+     * @param bool $force Overwrite the destination if it exists
+     *
+     * @return int
+     */
+    protected function copy($source, $destination, $force = false)
+    {
+        $destination_dir = dirname($destination);
+
+        if (!file_exists($source)) {
+            return static::ERROR_SOURCE_DOES_NOT_EXIST;
+        }
+
+        if (file_exists($destination) && !$force) {
+            return static::ERROR_DESTINATION_EXISTS;
+        }
+
+        if (!file_exists($destination_dir)) {
+            if (!mkdir($destination_dir, 0755, true)) {
+                return static::ERROR_FAILED_TO_CREATE_DIRECTORY;
+            }
+        } else if (!is_dir($destination_dir)) {
+            return static::ERROR_DESTINATION_NOT_DIRECTORY;
+        }
+
+        if (!copy($source, $destination)) {
+            return static::ERROR_COPY_FAILED;
+        }
+
+        return static::SUCCESS;
     }
 
     /**
