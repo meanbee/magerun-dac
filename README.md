@@ -12,7 +12,7 @@ commit it without any modifications first. This Magerun plugin adds a command to
 
 To install this plugin, clone this repository in `~/.n98-magerun/modules`:
 
-    mkdir ~/.n98-magerun/modules
+    mkdir -p ~/.n98-magerun/modules
     cd ~/.n98-magerun/modules
     git clone https://github.com/meanbee/magerun-dac.git
 
